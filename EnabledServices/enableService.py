@@ -1,3 +1,4 @@
+
 import boto3
 import json
 import os
@@ -11,15 +12,31 @@ def serialize_datetime(obj):
 def list_enabled_services():
     org_client = boto3.client('organizations')
 
-    # Call the ListAWSServiceAccessForOrganization API to retrieve the enabled services
-    list_services_output = org_client.list_aws_service_access_for_organization()
+    # Create a paginator for the ListAWSServiceAccessForOrganization API
+    paginator = org_client.get_paginator('list_aws_service_access_for_organization')
+    page_iterator = paginator.paginate()
 
-    # Extract the enabled services from the response
-    enabled_services = list_services_output['EnabledServicePrincipals']
+    # Create a list to store the enabled service objects
+    service_objects = []
 
-    # Create a dictionary to store the enabled services
+    # Iterate over the pages of results
+    for page in page_iterator:
+        # Extract the enabled services and their details from the page
+        enabled_services = page['EnabledServicePrincipals']
+
+        # Populate the list with the service objects
+        for service in enabled_services:
+            service_principal = service['ServicePrincipal'].split(".")[0]
+            date_enabled = service['DateEnabled']
+            service_object = {
+                'ServicePrincipal': service_principal,
+                'DateEnabled': date_enabled
+            }
+            service_objects.append(service_object)
+
+    # Create a dictionary with the list of service objects
     data = {
-        'EnabledServices': enabled_services
+        'EnabledServices': service_objects
     }
 
     # Convert datetime objects to string representation
