@@ -13,41 +13,44 @@ def get_account_details():
         'MaxResults': 10  # Update the MaxResults value to a lower value within the range
     }
 
-    # Retrieve the list of accounts
-    response = client.list_accounts(**params)
+    # Create a paginator for the list_accounts API
+    paginator = client.get_paginator('list_accounts')
+    page_iterator = paginator.paginate(**params)
 
     # Create a list to store the account details
     account_details = []
 
-    # Iterate over the accounts and extract the details
-    for account in response['Accounts']:
-        account_id = account['Id']
-        account_name = account['Name']
-        account_email = account['Email']
-        account_status = account['Status']
-        account_joined_method = account['JoinedMethod']
+    # Iterate over the pages of results
+    for page in page_iterator:
+        # Iterate over the accounts and extract the details
+        for account in page['Accounts']:
+            account_id = account['Id']
+            account_name = account['Name']
+            account_email = account['Email']
+            account_status = account['Status']
+            account_joined_method = account['JoinedMethod']
 
-        # Determine the account type
-        account_type = ''
-        if account_id == master_account_id:
-            account_type = 'Master Account'
-        elif account_joined_method == 'INVITED':
-            account_type = 'Invited'
-        elif account_joined_method == 'CREATED':
-            account_type = 'Created'
-        else:
-            account_type = 'Unknown'
+            # Determine the account type
+            account_type = ''
+            if account_id == master_account_id:
+                account_type = 'Master Account'
+            elif account_joined_method == 'INVITED':
+                account_type = 'Invited'
+            elif account_joined_method == 'CREATED':
+                account_type = 'Created'
+            else:
+                account_type = 'Unknown'
 
-        # Create a dictionary for the account details
-        account_info = {
-            'Account ID': account_id,
-            'Account Name': account_name,
-            'Account Email': account_email,
-            'Account Type': account_type
-        }
+            # Create a dictionary for the account details
+            account_info = {
+                'Account ID': account_id,
+                'Account Name': account_name,
+                'Account Email': account_email,
+                'Account Type': account_type
+            }
 
-        # Add the account details to the list
-        account_details.append(account_info)
+            # Add the account details to the list
+            account_details.append(account_info)
 
     # Find the output folder path
     current_directory = os.getcwd()
@@ -70,5 +73,7 @@ def get_account_details():
         json.dump(account_details, file, indent=4)
 
     print("JSON file generated successfully with account details.")
+
+
 
 
